@@ -27,7 +27,8 @@ const { BASE_URL, CLIENT_ID, ISSUER_BASE_URL, SECRET, JWT_SECRET } =
   process.env;
 
 const config = {
-  authRequired: false,
+  // change authRequired to false to allow post request to work
+  authRequired: true,
   auth0Logout: true,
   baseURL: BASE_URL,
   clientID: CLIENT_ID,
@@ -38,21 +39,22 @@ const config = {
 // auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
 
-// app.use(async (req, res, next) => {
-//   try {
-//     const [user] = await User.findOrCreate({
-//       where: {
-//         username: req.oidc.user.nickname,
-//         name: req.oidc.user.name,
-//         email: req.oidc.user.email,
-//       },
-//     });
-//     next();
-//   } catch (error) {
-//     console.log(error);
-//     next(error);
-//   }
-// });
+// This first piece of middleware needs commenting out to allow post request to work
+app.use(async (req, res, next) => {
+  try {
+    const [user] = await User.findOrCreate({
+      where: {
+        username: req.oidc.user.nickname,
+        name: req.oidc.user.name,
+        email: req.oidc.user.email,
+      },
+    });
+    next();
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
 
 // req.isAuthenticated is provided from the auth router
 app.get("/", (req, res) => {
@@ -105,6 +107,7 @@ const setUser = async (req, res, next) => {
   next();
 };
 
+// To allow the post request to work set authRequired to false in the config object and comment out the first piece of middleware
 app.post("/cupcakes", setUser, async (req, res, next) => {
   console.log(req.user);
   try {
